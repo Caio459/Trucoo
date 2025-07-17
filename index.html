@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Truco Final - Corrigido</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div id="match-score-board">
+            <h2>Partidas</h2>
+            <div>
+                <span>Você: <span id="player-matches-won">0</span></span>
+                <span>Computador: <span id="computer-matches-won">0</span></span>
+            </div>
+        </div>
+
+        <div id="score-board">
+            <span>Pontos: Você: <span id="player-score">0</span></span>
+            <span>Computador: <span id="computer-score">0</span></span>
+        </div>
+
+        <div id="computer-hand" class="hand"></div>
+        
+        <div id="table">
+            <div id="computer-card-played" class="card-placeholder"></div>
+            <div id="vira-container">
+                <p>Vira:</p>
+                <div id="vira-card" class="card-placeholder"></div>
+            </div>
+            <div id="player-card-played" class="card-placeholder"></div>
+        </div>
+
+        <div id="trick-history">
+            <h3>Turnos da Rodada</h3>
+            <div id="trick-results">
+                <span>1º: -</span>
+                <span>2º: -</span>
+                <span>3º: -</span>
+            </div>
+        </div>
+
+        <div id="player-hand" class="hand"></div>
+        <div id="game-message"><p>Clique em "Nova Partida" para começar!</p></div>
+        <div id="player-actions"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
