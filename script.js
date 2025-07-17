@@ -51,7 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateRoundValueDisplay() {
-        if (roundValue > 1 && trucoState === 'none') { // SÓ MOSTRA SE A APOSTA FOI ACEITA
+        // A lógica agora é: só mostra o placar se a aposta foi aceita (trucoState === 'none')
+        if (roundValue > 1 && trucoState === 'none') {
             roundValueDisplayEl.textContent = `VALENDO ${roundValue}`;
             roundValueDisplayEl.classList.remove('hidden');
         } else {
@@ -76,12 +77,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function startNewRound() { roundInProgress = true; roundValue = 1; trucoState = 'none'; challenger = null; createDeck(); playerHand = deck.splice(0, 3); computerHand = deck.splice(0, 3); vira = deck.pop(); determineManilhas(); currentTrick = 1; firstTrickWinner = null; trickWinners = []; trickStarter = roundStarter; isPlayerTurn = (trickStarter === 'player'); playerCardOnTable = null; computerCardOnTable = null; renderPlayedCard(null, playerCardPlayedEl); renderPlayedCard(null, computerCardPlayedEl); renderPlayedCard(vira, viraCardEl); renderPlayerHand(); renderComputerHand(); renderTrickHistory(); updateRoundValueDisplay(); if (isPlayerTurn) { gameMessageEl.textContent = 'Turno 1: Sua vez de jogar!'; } else { gameMessageEl.textContent = 'Turno 1: Vez do computador...'; setTimeout(computerPlayCard, 1500); } renderActionButtons(); }
     
-    // --- LÓGICA DE TRUCO ATUALIZADA ---
+    // Lógica de Truco
     function handleTrucoRequest(who) {
         if (!roundInProgress || trucoState !== 'none') return;
         challenger = who;
         roundValue = 3;
-        // O placar de aposta NÃO é mostrado ainda.
+        // Não mostra o placar ainda, só depois do aceite
         if (who === 'player') {
             trucoState = 'pending_computer_response';
             gameMessageEl.textContent = 'TRUCO! Aguardando resposta...';
@@ -144,7 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 challenger = 'player';
                 trucoState = 'pending_computer_response';
                 gameMessageEl.textContent = `Você pediu ${nextBet === 6 ? 'SEIS' : 'NOVE'}!`;
-                // O placar de aposta ainda NÃO é mostrado, espera a resposta do computador
                 renderActionButtons();
                 setTimeout(computerRespondToTruco, 1500);
             }
@@ -157,13 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!gameInProgress) {
             const nextButton = document.createElement('button');
             nextButton.id = 'new-round-btn';
-            if (playerMatchesWon < 2 && computerMatchesWon < 2) {
-                nextButton.textContent = 'Próxima Partida';
-                nextButton.addEventListener('click', () => startNewMatch(false));
-            } else {
-                nextButton.textContent = 'Jogar Novamente';
-                nextButton.addEventListener('click', resetSeries);
-            }
+            if (playerMatchesWon < 2 && computerMatchesWon < 2) { nextButton.textContent = 'Próxima Partida'; nextButton.addEventListener('click', () => startNewMatch(false)); }
+            else { nextButton.textContent = 'Jogar Novamente'; nextButton.addEventListener('click', resetSeries); }
             playerActionsEl.appendChild(nextButton);
             return;
         }
@@ -172,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const runBtn = document.createElement('button'); runBtn.textContent = 'Correr'; runBtn.className = 'action-btn run-btn'; runBtn.addEventListener('click', () => playerRespondToTruco('run')); playerActionsEl.appendChild(runBtn);
             if (roundValue < 12) { const raiseBtn = document.createElement('button'); raiseBtn.textContent = `Aumentar para ${roundValue + 3}`; raiseBtn.className = 'action-btn raise-btn'; raiseBtn.addEventListener('click', () => playerRespondToTruco('raise')); playerActionsEl.appendChild(raiseBtn); }
         } else if (roundInProgress) {
-            // CORREÇÃO: Botão de truco só aparece se não houver aposta em andamento
             if (trucoState === 'none') {
                 const trucoBtnEl = document.createElement('button');
                 trucoBtnEl.id = 'truco-btn';
