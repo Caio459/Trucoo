@@ -39,97 +39,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderPlayerHand() { playerHandEl.innerHTML = ''; playerHand.forEach(card => { const cardDiv = document.createElement('div'); cardDiv.className = 'card player-card'; cardDiv.innerHTML = `<span>${card.rank}</span><span>${getSuitSymbol(card.suit)}</span>`; cardDiv.addEventListener('click', () => playerPlayCard(card)); playerHandEl.appendChild(cardDiv); }); }
     function renderTrickHistory() { const results = trickResultsEl.children; for (let i = 0; i < 3; i++) { const winner = trickWinners[i]; if (winner) { results[i].textContent = `${i+1}º: ${winner === 'player' ? 'Você' : winner === 'computer' ? 'CPU' : 'Empate'}`; } else { results[i].textContent = `${i+1}º: -`; } } }
     function updateRoundValueDisplay() { if (roundValue > 1 && trucoState === 'none') { roundValueDisplayEl.textContent = `VALENDO ${roundValue}`; roundValueDisplayEl.classList.remove('hidden'); } else { roundValueDisplayEl.classList.add('hidden'); } }
-
     function playerPlayCard(card) { if (!isPlayerTurn || !roundInProgress || trucoState !== 'none') return; playerCardOnTable = card; renderPlayedCard(card, playerCardPlayedEl); playerHand = playerHand.filter(c => c !== card); renderPlayerHand(); isPlayerTurn = false; if (!computerCardOnTable) { gameMessageEl.textContent = 'Vez do computador...'; setTimeout(computerPlayCard, 1000); } else { setTimeout(evaluateTrick, 1000); } }
     function computerPlayCard() { if (isPlayerTurn || !roundInProgress || trucoState !== 'none') return; const handStrength = Math.max(...computerHand.map(getCardStrength)); const canCallTruco = roundValue === 1 && isPlayerTurn === false; if (canCallTruco) { const wantsToCallWithGoodHand = handStrength >= 11 && Math.random() < 0.4; const wantsToBluff = handStrength < 11 && Math.random() < 0.15; if (wantsToCallWithGoodHand || wantsToBluff) { handleTrucoRequest('computer'); return; } } let cardToPlay; if (!playerCardOnTable) { let nonManilhaHand = computerHand.filter(c => getCardStrength(c) < 11); cardToPlay = nonManilhaHand.length > 0 ? nonManilhaHand.reduce((s, c) => getCardStrength(c) > getCardStrength(s) ? c : s) : computerHand.reduce((w, c) => getCardStrength(c) < getCardStrength(w) ? c : w); } else { const playerCardStrength = getCardStrength(playerCardOnTable); let bestCardToWin = null, weakestCard = computerHand[0]; computerHand.forEach(card => { const strength = getCardStrength(card); if (strength > playerCardStrength) { if (!bestCardToWin || strength < getCardStrength(bestCardToWin)) bestCardToWin = card; } if (strength < getCardStrength(weakestCard)) weakestCard = card; }); cardToPlay = bestCardToWin || weakestCard; } computerCardOnTable = cardToPlay; renderPlayedCard(cardToPlay, computerCardPlayedEl); computerHand = computerHand.filter(c => c !== cardToPlay); renderComputerHand(); if (!playerCardOnTable) { isPlayerTurn = true; gameMessageEl.textContent = 'Sua vez de jogar!'; } else { setTimeout(evaluateTrick, 1000); } }
-    
     function evaluateTrick() { let winnerOfThisTrick; if (!playerCardOnTable || !computerCardOnTable) return; const playerStrength = getCardStrength(playerCardOnTable); const computerStrength = getCardStrength(computerCardOnTable); if (playerStrength > computerStrength) { winnerOfThisTrick = 'player'; } else if (computerStrength > playerStrength) { winnerOfThisTrick = 'computer'; } else { winnerOfThisTrick = 'tie'; } trickWinners[currentTrick - 1] = winnerOfThisTrick; if(currentTrick === 1 && winnerOfThisTrick !== 'tie') { firstTrickWinner = winnerOfThisTrick; } renderTrickHistory(); gameMessageEl.textContent = winnerOfThisTrick === 'player' ? 'Você ganhou o turno!' : winnerOfThisTrick === 'computer' ? 'Computador ganhou o turno!' : 'Empatou o turno!'; checkForRoundWinner(); }
     function checkForRoundWinner() { const playerTrickWins = trickWinners.filter(w => w === 'player').length; const computerTrickWins = trickWinners.filter(w => w === 'computer').length; if (playerTrickWins === 2) { endRound('player'); return; } if (computerTrickWins === 2) { endRound('computer'); return; } if (trickWinners[0] === 'tie') { if (trickWinners.length > 1 && trickWinners[1] !== 'tie') { endRound(trickWinners[1]); return; } } if (currentTrick === 2 && trickWinners[1] === 'tie' && firstTrickWinner) { endRound(firstTrickWinner); return; } if (currentTrick === 3) { if (playerTrickWins > computerTrickWins) endRound('player'); else if (computerTrickWins > playerTrickWins) endRound('computer'); else endRound(firstTrickWinner || roundStarter); } else { setTimeout(() => startNextTrick(trickWinners[currentTrick - 1]), 2000); } }
     function startNextTrick(winner) { currentTrick++; playerCardOnTable = null; computerCardOnTable = null; renderPlayedCard(null, playerCardPlayedEl); renderPlayedCard(null, computerCardPlayedEl); trickStarter = winner === 'tie' ? trickStarter : winner; isPlayerTurn = (trickStarter === 'player'); renderActionButtons(); if (isPlayerTurn) { gameMessageEl.textContent = `Turno ${currentTrick}: Sua vez!`; } else { gameMessageEl.textContent = `Turno ${currentTrick}: Vez do computador...`; setTimeout(computerPlayCard, 1500); } }
-    
     function endRound(winner) { roundInProgress = false; if (winner === 'player') { playerScore += roundValue; } else if (winner === 'computer') { computerScore += roundValue; } roundStarter = (roundStarter === 'player') ? 'computer' : 'player'; updateScores(); if (playerScore >= 12) { endMatch('player'); } else if (computerScore >= 12) { endMatch('computer'); } else { let winnerText = winner === 'tie' ? 'A rodada empatou!' : `${winner === 'player' ? 'Você' : 'O Computador'} ganhou a rodada!`; gameMessageEl.textContent = winnerText; setTimeout(renderActionButtons, 2000); } }
     function endMatch(winner) { if (winner === 'player') { playerMatchesWon++; } else { computerMatchesWon++; } updateScores(); if (playerMatchesWon === 2) { endSeries('Você'); } else if (computerMatchesWon === 2) { endSeries('O Computador'); } else { gameInProgress = false; gameMessageEl.textContent = `${winner === 'player' ? 'Você' : 'O Computador'} ganhou a partida!`; renderActionButtons(); } }
     function endSeries(winner) { gameInProgress = false; gameMessageEl.textContent = `FIM DE JOGO! ${winner} VENCEU A SÉRIE!`; renderActionButtons(); }
     function updateScores() { playerScoreEl.textContent = playerScore; computerScoreEl.textContent = computerScore; playerMatchesWonEl.textContent = playerMatchesWon; computerMatchesWonEl.textContent = computerMatchesWon; }
-    
     function resetSeries() { playerMatchesWon = 0; computerMatchesWon = 0; updateScores(); startNewMatch(true); }
     function startNewMatch(isNewSeries = false) { playerScore = 0; computerScore = 0; roundStarter = isNewSeries ? 'player' : roundStarter; gameInProgress = true; startNewRound(); }
-    
     function startNewRound() { roundInProgress = true; roundValue = 1; trucoState = 'none'; challenger = null; createDeck(); playerHand = deck.splice(0, 3); computerHand = deck.splice(0, 3); vira = deck.pop(); determineManilhas(); currentTrick = 1; firstTrickWinner = null; trickWinners = []; trickStarter = roundStarter; isPlayerTurn = (trickStarter === 'player'); playerCardOnTable = null; computerCardOnTable = null; renderPlayedCard(null, playerCardPlayedEl); renderPlayedCard(null, computerCardPlayedEl); renderPlayedCard(vira, viraCardEl); renderPlayerHand(); renderComputerHand(); renderTrickHistory(); updateRoundValueDisplay(); if (isPlayerTurn) { gameMessageEl.textContent = 'Turno 1: Sua vez de jogar!'; } else { gameMessageEl.textContent = 'Turno 1: Vez do computador...'; setTimeout(computerPlayCard, 1500); } renderActionButtons(); }
+    function handleTrucoRequest(who) { if ((who === 'player' && !isPlayerTurn) || !roundInProgress || trucoState !== 'none') return; challenger = who; roundValue = 3; if (who === 'player') { trucoState = 'pending_computer_response'; gameMessageEl.textContent = 'TRUCO! Aguardando resposta...'; } else { trucoState = 'pending_player_response'; gameMessageEl.textContent = 'O computador pediu TRUCO!'; } renderActionButtons(); if (who === 'player') setTimeout(computerRespondToTruco, 1500); }
+    function computerRespondToTruco() { const handStrength = Math.max(...computerHand.map(getCardStrength)); const nextBet = roundValue + 3; if (handStrength >= 13 && nextBet <= 12) { roundValue = nextBet; challenger = 'computer'; trucoState = 'pending_player_response'; gameMessageEl.textContent = `O computador pediu ${nextBet === 6 ? 'SEIS' : 'NOVE'}!`; updateRoundValueDisplay(); renderActionButtons(); } else if (handStrength >= 11) { trucoState = 'none'; gameMessageEl.textContent = `O computador ACEITOU!`; updateRoundValueDisplay(); renderActionButtons(); if (challenger === 'player') { isPlayerTurn = false; setTimeout(computerPlayCard, 1000); } else { isPlayerTurn = true; } } else { const pointsWon = roundValue === 3 ? 1 : roundValue - 3; playerScore += pointsWon; gameMessageEl.textContent = `O computador CORREU! Você ganhou ${pointsWon} ponto(s).`; roundInProgress = false; trucoState = 'none'; updateScores(); if (playerScore >= 12) { endMatch('player'); } else { setTimeout(renderActionButtons, 2000); } } }
+    function playerRespondToTruco(response) { if (response === 'run') { const pointsWon = roundValue === 3 ? 1 : roundValue - 3; computerScore += pointsWon; gameMessageEl.textContent = `Você CORREU! O computador ganhou ${pointsWon} ponto(s).`; roundInProgress = false; trucoState = 'none'; updateScores(); if (computerScore >= 12) { endMatch('computer'); } else { setTimeout(renderActionButtons, 2000); } } else if (response === 'accept') { trucoState = 'none'; gameMessageEl.textContent = `Você ACEITOU!`; updateRoundValueDisplay(); renderActionButtons(); if (challenger === 'computer') { isPlayerTurn = true; } else { isPlayerTurn = false; setTimeout(computerPlayCard, 1000); } } else if (response === 'raise') { const nextBet = roundValue + 3; if (nextBet <= 12) { roundValue = nextBet; challenger = 'player'; trucoState = 'pending_computer_response'; gameMessageEl.textContent = `Você pediu ${nextBet === 6 ? 'SEIS' : 'NOVE'}!`; updateRoundValueDisplay(); renderActionButtons(); setTimeout(computerRespondToTruco, 1500); } } }
     
-    // --- LÓGICA DE TRUCO (COM PONTUAÇÃO DE CORRER CORRETA) ---
-    function handleTrucoRequest(who) {
-        if ((who === 'player' && !isPlayerTurn) || !roundInProgress || trucoState !== 'none') return;
-        challenger = who;
-        roundValue = 3;
-        if (who === 'player') {
-            trucoState = 'pending_computer_response';
-            gameMessageEl.textContent = 'TRUCO! Aguardando resposta...';
-        } else {
-            trucoState = 'pending_player_response';
-            gameMessageEl.textContent = 'O computador pediu TRUCO!';
-        }
-        renderActionButtons();
-        if (who === 'player') setTimeout(computerRespondToTruco, 1500);
-    }
-
-    function computerRespondToTruco() {
-        const handStrength = Math.max(...computerHand.map(getCardStrength));
-        const nextBet = roundValue + 3;
-        if (handStrength >= 13 && nextBet <= 12) {
-            roundValue = nextBet;
-            challenger = 'computer';
-            trucoState = 'pending_player_response';
-            gameMessageEl.textContent = `O computador pediu ${nextBet === 6 ? 'SEIS' : 'NOVE'}!`;
-            renderActionButtons();
-        } else if (handStrength >= 11) {
-            trucoState = 'none';
-            gameMessageEl.textContent = `O computador ACEITOU! A rodada vale ${roundValue} pontos.`;
-            updateRoundValueDisplay();
-            renderActionButtons();
-            if (challenger === 'player') { isPlayerTurn = false; setTimeout(computerPlayCard, 1000); }
-        } else {
-            const pointsWon = roundValue === 3 ? 1 : roundValue - 3;
-            playerScore += pointsWon;
-            gameMessageEl.textContent = `O computador CORREU! Você ganhou ${pointsWon} ponto(s).`;
-            roundInProgress = false;
-            trucoState = 'none';
-            updateScores();
-            if (playerScore >= 12) { endMatch('player'); } 
-            else { setTimeout(renderActionButtons, 2000); }
-        }
-    }
-
-    function playerRespondToTruco(response) {
-        if (response === 'run') {
-            const pointsWon = roundValue === 3 ? 1 : roundValue - 3;
-            computerScore += pointsWon;
-            gameMessageEl.textContent = `Você CORREU! O computador ganhou ${pointsWon} ponto(s).`;
-            roundInProgress = false;
-            trucoState = 'none';
-            updateScores();
-            if (computerScore >= 12) { endMatch('computer'); }
-            else { setTimeout(renderActionButtons, 2000); }
-        } else if (response === 'accept') {
-            trucoState = 'none';
-            gameMessageEl.textContent = `Você ACEITOU! A rodada vale ${roundValue} pontos.`;
-            updateRoundValueDisplay();
-            renderActionButtons();
-            if (challenger === 'computer') { isPlayerTurn = true; }
-            else { isPlayerTurn = false; setTimeout(computerPlayCard, 1000); }
-        } else if (response === 'raise') {
-            const nextBet = roundValue + 3;
-            if (nextBet <= 12) {
-                roundValue = nextBet;
-                challenger = 'player';
-                trucoState = 'pending_computer_response';
-                gameMessageEl.textContent = `Você pediu ${nextBet === 6 ? 'SEIS' : 'NOVE'}!`;
-                renderActionButtons();
-                setTimeout(computerRespondToTruco, 1500);
-            }
-        }
-    }
-
     function renderActionButtons() {
         playerActionsEl.innerHTML = '';
         if (!gameInProgress) {
@@ -145,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const runBtn = document.createElement('button'); runBtn.textContent = 'Correr'; runBtn.className = 'action-btn run-btn'; runBtn.addEventListener('click', () => playerRespondToTruco('run')); playerActionsEl.appendChild(runBtn);
             if (roundValue < 12) { const raiseBtn = document.createElement('button'); raiseBtn.textContent = `Aumentar para ${roundValue + 3}`; raiseBtn.className = 'action-btn raise-btn'; raiseBtn.addEventListener('click', () => playerRespondToTruco('raise')); playerActionsEl.appendChild(raiseBtn); }
         } else if (roundInProgress) {
+            // Lógica final para mostrar o botão de truco
             if (trucoState === 'none' && roundValue === 1) {
                 const trucoBtnEl = document.createElement('button');
                 trucoBtnEl.id = 'truco-btn';
@@ -153,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 trucoBtnEl.addEventListener('click', () => handleTrucoRequest('player'));
                 playerActionsEl.appendChild(trucoBtnEl);
             }
-        } else {
+        } else { // roundInProgress is false, but gameInProgress is true
             const newRoundBtnEl = document.createElement('button');
             newRoundBtnEl.id = 'new-round-btn';
             newRoundBtnEl.textContent = 'Próxima Rodada';
@@ -162,6 +88,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Início do Jogo
     resetSeries();
 });
