@@ -1,4 +1,3 @@
-/* --- GERAL E LAYOUT --- */
 body {
     background-color: #0a4a1a;
     font-family: Arial, Helvetica, sans-serif;
@@ -9,7 +8,6 @@ body {
     color: white;
     margin: 0;
 }
-
 .game-container {
     width: 90%;
     max-width: 800px;
@@ -21,8 +19,6 @@ body {
     flex-direction: column;
     gap: 15px;
 }
-
-/* --- PLACARES --- */
 #match-score-board {
     background-color: rgba(0, 0, 0, 0.3);
     border-radius: 10px;
@@ -35,12 +31,23 @@ body {
 #trick-history { background-color: rgba(0, 0, 0, 0.15); border-radius: 5px; padding: 5px 10px; margin-top: -10px; margin-bottom: 10px; }
 #trick-history h3 { text-align: center; margin: 5px 0; font-size: 0.9em; color: #eee; }
 #trick-results { display: flex; justify-content: space-around; font-size: 0.9em; font-weight: bold; }
-
-/* --- NOVO PLACAR DE APOSTA --- */
+#vira-container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+.vira-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
 #round-value-display {
-    margin-top: 10px;
     padding: 5px 10px;
-    background-color: #c0392b; /* Vermelho, cor do truco */
+    background-color: #c0392b;
     color: white;
     font-weight: bold;
     border-radius: 5px;
@@ -49,20 +56,13 @@ body {
     transition: opacity 0.3s;
 }
 .hidden { display: none !important; }
-
-/* --- MESA E MÃOS --- */
 .hand { display: flex; justify-content: center; gap: 10px; min-height: 120px; }
 #table { display: flex; justify-content: space-around; align-items: center; background-color: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; min-height: 140px; }
-
-/* --- CARTAS --- */
 .card { width: 80px; height: 110px; background-color: white; border: 1px solid black; border-radius: 5px; color: black; display: flex; flex-direction: column; justify-content: space-between; padding: 5px; font-size: 1.5em; font-weight: bold; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); user-select: none; }
 .player-card { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
 .player-card:hover { transform: translateY(-10px); box-shadow: 4px 12px 15px rgba(0,0,0,0.4); }
 .facedown { background-color: #b42a2a; border: 5px solid white; }
 .card-placeholder { width: 85px; height: 115px; border: 2px dashed rgba(255, 255, 255, 0.5); border-radius: 5px; }
-
-/* --- TEXTOS E BOTÕES --- */
-#vira-container { text-align: center; }
 #game-message p { text-align: center; font-size: 1.2em; font-style: italic; min-height: 25px; margin: 5px 0; }
 #player-actions { display: flex; justify-content: center; gap: 20px; min-height: 50px; align-items: center; }
 button { border-radius: 5px; cursor: pointer; font-weight: bold; transition: background-color 0.2s; }
